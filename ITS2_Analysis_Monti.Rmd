@@ -383,6 +383,16 @@ all_data %>%
   mutate(cumulative_sum = cumsum(prop)) %>% 
   print(n=73) #to get a list of the type profiles in montipora
 
+all_data %>%
+  filter(str_detect(name, "p_")) %>%    #profiles start with p_
+  group_by(name) %>%
+  dplyr:: count() %>%
+  dplyr:: arrange(desc(n)) %>%
+  ungroup() %>%
+  mutate(prop = n/sum(n)) %>%
+  mutate(cumulative_sum = cumsum(prop)) %>% 
+  print(n=73) %>%  #to get a list of the type profiles in montipora
+write.csv(file = "Montipora_ITS2_Type_Profiles.csv")
 ```
 
 
