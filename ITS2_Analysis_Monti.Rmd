@@ -321,6 +321,9 @@ all_pal['non-profile sequences'] <- "#808080"
 
 # Join profiles and sequence data together into single dataframe and add more metadata
 all_data <- rbind(seqs_long, profile_data) 
+
+#symbioant_monti_all <- all_data
+#save(symbioant_monti_all, file = "symbioant_monti_all.RData")
 ```
 
 ```{r}
