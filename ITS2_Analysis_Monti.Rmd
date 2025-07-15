@@ -66,7 +66,10 @@ meta_monti <- meta_monti %>%
   select(sample_name, Reference, Reef, Site,Date, Bag, Species,Depth, `Bleach score`, Vial, Year) %>% 
   filter(Species == "Montipora",
          Year != "20",
-         sample_name %in% c("A263-24", "I132-24"))
+         sample_name %in% c("A263-24", "I132-24")) |> 
+  mutate(Region = if_else(Reef %in% c("Middleton", "Elizabeth"), 
+                          "LordHowe", 
+                          "CoralSea"))
 meta_monti
 ```
 
@@ -397,7 +400,7 @@ k_tree_monti <- kdist_monti %>% phangorn::upgma()
 
 k_tree_monti
 ```
-
+Phylogenetic tree with 992 and 991 internal nodes
 ```{r}
 seqs_wide_monti <- seq_data %>%
   dplyr::select(sample_name, name, value) %>%
@@ -408,10 +411,10 @@ head(seqs_wide_monti)
 ```
 
 ```{r}
-#k_unidist_monti <- GUniFrac(seqs_wide_monti, k_tree_monti)   #GUniFrac calculates all the distances 
-#k_unidist_monti <- k_unidist_monti$unifracs
+k_unidist_monti <- GUniFrac(seqs_wide_monti, k_tree_monti)   #GUniFrac calculates all the distances 
+k_unidist_monti <- k_unidist_monti$unifracs
 
-load("~/AIMS@JCU/CoralSeaSymbioants/ITS2 Montipora/Montipora_CS_Analysis/k_unidist_monti.RData")
+#load("~/AIMS@JCU/CoralSeaSymbioants/ITS2 Montipora/Montipora_CS_Analysis/k_unidist_monti.RData")
 
  # GUniFrac with alpha 0.5 (i.e Generalised UniFrac Distance)
 du_monti <- k_unidist_monti[, , "d_0.5"]   
@@ -488,33 +491,39 @@ combined_plot
 ###4.1.3 monti Reef PCoA
 ```{r}
 pcoa_monti <- cmdscale(dist_monti, eig = TRUE)    #this is doing 'cmds' or classic multidimensional scaling
+reef_order <- c("Willis", "Madgelaine", "Herald", "Diamond", "Coringa",
+  "Marion", "Mellish", "Frederick", "Saumarez", "Kenn",
+  "Wreck", "Cato", "GBR", "Elizabeth", "Middleton")
 
-#outlier_samples <- X
 
 ordiplot(pcoa_monti, display = 'sites', type = 'text')
-barplot (pcoa_monti$eig, names = paste ('PCoA', 1:X), las = X, ylab = 'eigenvalues')
+barplot (pcoa_monti$eig, names = paste ('PCoA', 1:188),  ylab = 'eigenvalues')
 
 # Custom x and y labels
-xlab = paste("Axis 1 (X)")
-ylab = paste("Axis 2 (X)")
+xlab = paste("Axis 1 (X%)")
+ylab = paste("Axis 2 (X%)")
 
 MDSxy.monti <- data.frame(pcoa_monti$points) %>% 
   rownames_to_column(var = "sample_name") %>% 
-  left_join(., meta_monti)# %>% 
- #  mutate(catBleaching = as.factor(catBleaching)) %>% 
- # filter(!(Vial %in% outlier_samples)) 
+  left_join(., meta_monti)
 
 montiPCA <- MDSxy.monti %>%
   filter(Reef != "NA") %>% 
- # mutate(Reef = fct_relevel(Reef, reef_order)) %>%
+  mutate(Reef = fct_relevel(Reef, reef_order)) %>%
   ggplot(aes(X1, X2, fill = Reef)) + 
-  geom_point(alpha = 1, shape = 21, size = 3) + 
-  scale_fill_viridis_d(option = "magma", direction = -1)+ 
-#  scale_fill_manual(values = reef_pal) #+
- theme(legend.position = "none", aspect.ratio = 1, text = element_text(size = 15))
+  geom_point(alpha = 1, shape = 21, size = 3) 
 
-montiPCA
+#outlier_samples <- X
+
 ```
+
+```{r}
+MDSxy.monti %>%
+  filter(Reef != "NA") %>% 
+  ggplot(aes(X1, X2, fill = Region)) + 
+  geom_point(alpha = 1, shape = 21, size = 3)
+```
+
 
 ## Procrustes Rotation
 
