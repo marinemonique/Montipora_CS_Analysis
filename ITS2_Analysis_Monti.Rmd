@@ -71,6 +71,17 @@ meta_monti <- meta_monti %>%
 meta_monti
 ```
 
+# Read in environmental data and combine
+```{r}
+enviro <- read.csv("~/AIMS@JCU/enviro.meta.csv") 
+
+enviro <- enviro |> 
+  rename(POI_ID = "Reef")
+meta_monti <- meta_monti |> 
+  left_join(enviro)
+```
+
+
 ### Load Custom Functions
 ```{r}
 read_fasta_df <- function (file = "") {
