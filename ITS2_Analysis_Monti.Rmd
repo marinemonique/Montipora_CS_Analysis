@@ -42,11 +42,8 @@ library(usedist)
 
 ```{r}
 seqs_monti <- read_tsv("seqs.abs.monti.txt") %>% 
-    filter(!(is.na(sample_name))) %>%
-  dplyr::select(sample_name,
-                `A1`: `G3fd`
-                #`A1-A1qd-A1qe` : `G3fd`
-                ) %>% 
+    filter(!(is.na(sample_name))) #%>%
+  dplyr::select(sample_name,`A1`: `737005_G`) %>% 
   mutate(sample_name = as.factor(sample_name)) %>% 
   filter(!grepl("-20", sample_name) & !grepl("b", sample_name))
 
@@ -69,7 +66,7 @@ meta_monti <- meta_monti %>%
   select(sample_name, Reference, Reef, Site,Date, Bag, Species,Depth, `Bleach score`, Vial, Year) %>% 
   filter(Species == "Montipora",
          Year != "20",
-         sample_name != c("A263-24", "I132-24"))
+         sample_name %in% c("A263-24", "I132-24"))
 meta_monti
 ```
 
@@ -188,10 +185,14 @@ pal_df <- data.frame(names = names(palette), col = palette)
 # Convert to long format
 seqs_long <- seqs_monti %>%
   filter(!is.na(sample_name)) %>%
-  select(sample_name, `A1`:`G3ai`) %>%
-  pivot_longer(`A1`:`G3ai`) %>%
+  select(sample_name, `A1`:`737005_G`) %>%
+  pivot_longer(`A1`:`737005_G`) %>%
   filter(value > 0) %>% # Remove zero values
   left_join(., meta_monti)
+
+seqs_long <- seqs_long %>%  filter(!str_detect(name, "non")) %>% 
+  filter(!str_detect(name, "p_")) %>%
+  filter(str_sub(name, 1, 1) == "C" | str_detect(name, "_C"))
 
 # Q. Are we working with the post-med seqs according to the metadata in seqs?
 san_check <- seqs_long %>%
@@ -270,93 +271,7 @@ all_data <- rbind(seqs_long, profile_data)
 
 ```
 
-```{r}
-# Convert to long format
-seqs_long <- seqs_monti %>%
-  filter(!is.na(sample_name)) %>%
-  select(sample_name, `A1`:`G3ai`) %>%
-  pivot_longer(`A1`:`G3ai`) %>%
-  filter(value > 0) %>% # Remove zero values
-  left_join(., meta_monti)
 
-# Q. Are we working with the post-med seqs according to the metadata in seqs?
-san_check <- seqs_long %>%
-  group_by(sample_name) %>%
-  summarise(total = sum(value)) #A. yes
-
-# Create a list of samples to keep that didnt fail to sequence
-keepers_ss <- san_check %>%
-  filter(total > 1500)
-
-non_keep <- san_check %>% 
-  filter(total < 1500)
-
-#we filter out 2 samples with less than A142 and A191
-
-# Filter out the failed samples
-seqs_long <- seqs_long %>%
-  filter(sample_name %in% keepers_ss$sample_name) %>%
-  group_by(sample_name) %>%
-  mutate(value_rel = value/sum(value)) %>% # Convert to relative abundance
-  ungroup() %>%
-  mutate(name = as.factor(name)) # Make sample names a factor
-
-# Create a random palette for each sequence
-n <- length(levels(seqs_long$name))
-seqs_pal = rainbow(n, s=.6, v=.9)[sample(1:n,n, replace = FALSE)]
-names(seqs_pal) <- levels(seqs_long$name)
-
-# Read in the profile data
-profiles_raw <- read_tsv("profiles.abs.monti.txt", skip = 6) %>%
-    select(sample_name = `...2`, `A1-A1qd-A1qe`:`G3fd`) %>%
-    filter(!is.na(sample_name)) %>%
-  select(sample_name, `A1-A1qd-A1qe`:`G3fd`)
-
-#Convert to long format 
-profiles_long <- profiles_raw %>%
-  pivot_longer(`A1-A1qd-A1qe`:`G3fd`) %>% # Convert it to long format
-  mutate(name = paste0("p_", name)) %>% # Add a p_ to the beginning of each profile (Some profiles are single sequence profiles and clash with the Sequence names)
-  filter(sample_name %in% seqs_long$sample_name) %>% # Remove samples that dont appear in the Sequence dataframe
-  group_by(sample_name) %>%
-  mutate(value = as.numeric(value)) %>%
-  filter(value > 0) %>% # Remove 0 abundance profiles
-  mutate(sample_name = as.factor(sample_name),
-         name = as.factor(name)) %>% 
-  ungroup() %>%
-  left_join(., meta_monti) # Add in metadata
-
-# What is the total number of profile-related sequences in each sample?
-profiles_sum <- profiles_long %>%
-  group_by(sample_name) %>%
-  summarise(total = sum(value))
-
-# How many sequences in each sample are not part of a profile?
-residual <- left_join(profiles_sum, san_check, by = "sample_name") %>%
-  mutate(residual = total.y - total.x) %>%
-  select(sample_name, value = residual) %>%
-  mutate(name = "non-profile sequences") %>%
-  left_join(., meta_monti)
-
-# Combine the profiles and non-profile sequences
-profile_data <- rbind(profiles_long, residual) %>%
-  group_by(sample_name) %>%
-  mutate(value_rel = value/sum(value)) # convert to relative abundance - in that sample 
-
-# Create palette for profiles (this is a darker palette)
-n <- length(levels(profile_data$name))
-profile_pal = rainbow(n, s=.6, v=.6)[sample(1:n,n, replace = FALSE)]
-names(profile_pal) <- levels(profile_data$name)
-
-# Merge the palettes and replace the non-profile sequences with grey
-all_pal <- c(seqs_pal, profile_pal)
-all_pal['non-profile sequences'] <- "#808080" 
-
-# Join profiles and sequence data together into single dataframe and add more metadata
-all_data <- rbind(seqs_long, profile_data) 
-
-#symbioant_monti_all <- all_data
-#save(symbioant_monti_all, file = "symbioant_monti_all.RData")
-```
 
 ```{r}
 # How many samples per species?
