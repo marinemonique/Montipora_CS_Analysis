@@ -15,11 +15,9 @@ knitr::opts_chunk$set(echo = TRUE)
 library(ggsci)
 library(tidyverse)
 library(dplyr)
-#library(forcats)
 library(reshape2)
 library(stringr)
 library(tidyr)
-#library(tibble)
 #library(sangerseqR)
 #library(DECIPHER)
 library(Biostrings)
@@ -67,10 +65,12 @@ meta_monti <- CoralSea2024_Metadata %>%
 meta_monti <- meta_monti %>% 
   select(sample_name, Reference, Reef, Site,Date, Bag, Species,Depth, `Bleach score`, Vial, Year) %>% 
   filter(Species == "Montipora",
-         Year != "20")
+         Year != "20",
+         sample_name != c("A263-24", "I132-24"))
 meta_monti
 ```
 
+Remove sample_name A263-24, I132-24 
 # Read in environmental data and combine
 ```{r}
 enviro <- read.csv("~/AIMS@JCU/enviro.meta.csv") 
