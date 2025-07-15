@@ -81,6 +81,24 @@ meta_monti <- meta_monti |>
   left_join(enviro)
 ```
 
+## Load Host Data
+```{r}
+load("~/AIMS@JCU/CoralSeaSymbioants/ITS2 Montipora/Montipora_CS_Analysis/ind_coords_monti.RData")
+
+monti_seqs_host <- ind_coords_monti %>% 
+  mutate("sample_name" = VialID)
+
+ind_coords_monti <- ind_coords_monti |>
+  mutate("sample_name" = VialID) |> mutate(HostCluster = case_when(
+    Axis1 < -5 ~ "MC1a",
+    Axis1 > -5 & Axis1 < 0 ~ "MC1b",
+    Axis1 > 5 & Axis1 < 20 ~ "MC3",
+    Axis2 > 10 ~ "MC2",
+    Axis1 > 20 ~ "MC4",
+    TRUE ~ NA_character_  # anything that doesn't match the above
+  ))
+```
+
 
 ### Load Custom Functions
 ```{r}
@@ -587,6 +605,15 @@ load("~/AIMS@JCU/CoralSeaSymbioants/ITS2 Montipora/Montipora_CS_Analysis/ind_coo
 
 monti_seqs_host <- ind_coords_monti %>% 
   mutate("sample_name" = VialID)
+
+ind_coords_monti <- ind_coords_monti |> mutate(HostCluster = case_when(
+    Axis1 < -5 ~ "MC1a",
+    Axis1 > -5 & Axis1 < 0 ~ "MC1b",
+    Axis1 > 5 & Axis1 < 20 ~ "MC3",
+    Axis2 > 10 ~ "MC2",
+    Axis1 > 20 ~ "MC4",
+    TRUE ~ NA_character_  # anything that doesn't match the above
+  ))
 
 #code for defining specific colours per reef for procrustes plots later on
 reef_pal2 <- c("#ac1917", "#e54a50", "#b75420", "#ea8553", "#c0982b", "#eec76b", "#768b45", "#a9be77", "#B2DFDB", "#4eaaa6", "#00798C")
