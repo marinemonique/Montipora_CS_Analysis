@@ -43,7 +43,10 @@ library(usedist)
 ```{r}
 seqs_monti <- read_tsv("seqs.abs.monti.txt") %>% 
     filter(!(is.na(sample_name))) %>%
-  dplyr::select(sample_name, `A1`:`G3ai`) %>% 
+  dplyr::select(sample_name,
+                `A1`: `G3fd`
+                #`A1-A1qd-A1qe` : `G3fd`
+                ) %>% 
   mutate(sample_name = as.factor(sample_name)) %>% 
   filter(!grepl("-20", sample_name) & !grepl("b", sample_name))
 
