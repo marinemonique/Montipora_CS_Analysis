@@ -66,7 +66,7 @@ meta_monti <- meta_monti %>%
   select(sample_name, Reference, Reef, Site,Date, Bag, Species,Depth, `Bleach score`, Vial, Year) %>% 
   filter(Species == "Montipora",
          Year != "20",
-         sample_name %in% c("A263-24", "I132-24")) |> 
+         !(sample_name %in% c("A263-24", "I132-24"))) |> 
   mutate(Region = if_else(Reef %in% c("Middleton", "Elizabeth"), 
                           "LordHowe", 
                           "CoralSea"))
@@ -91,8 +91,8 @@ load("~/AIMS@JCU/CoralSeaSymbioants/ITS2 Montipora/Montipora_CS_Analysis/ind_coo
 monti_seqs_host <- ind_coords_monti %>% 
   mutate("sample_name" = VialID)
 
-ind_coords_monti <- ind_coords_monti |>
-  mutate("sample_name" = VialID) |> mutate(HostCluster = case_when(
+ind_coords_monti <- ind_coords_monti |> 
+  mutate(HostCluster = case_when(
     Axis1 < -5 ~ "MC1a",
     Axis1 > -5 & Axis1 < 0 ~ "MC1b",
     Axis1 > 5 & Axis1 < 20 ~ "MC3",
@@ -100,6 +100,14 @@ ind_coords_monti <- ind_coords_monti |>
     Axis1 > 20 ~ "MC4",
     TRUE ~ NA_character_  # anything that doesn't match the above
   ))
+
+ind_coords_monti <- ind_coords_monti %>% 
+  dplyr::rename(sample_name = SampleID) %>% 
+  dplyr::select(Axis1, Axis2, Axis3, sample_name, HostCluster)
+
+meta_monti <- meta_monti |> 
+  left_join(ind_coords_monti) %>% 
+  na.omit()
 ```
 
 
@@ -297,6 +305,7 @@ study_total <- all_data %>%
 Please note I was a bit confused by some of the calculations here, so I have hashed them out.
 ```{r}
 all_data %>%
+  #group_by(HostCluster) |> 
   filter(!(str_detect(name, "p_")), name != "non-profile sequences") %>%
   filter(str_sub(name, 1, 1) == "C" | str_detect(name, "_C")) %>% 
   summarise(sum = sum(value))
@@ -334,7 +343,7 @@ all_data %>%
   ungroup() %>%
   mutate(prop = n/sum(n)) %>%
   mutate(cumulative_sum = cumsum(prop)) %>% 
-  print(n=73) #to get a list of the type profiles in montipora
+  print(n=110) #to get a list of the type profiles in montipora
 
 all_data %>%
   filter(str_detect(name, "p_")) %>%    #profiles start with p_
@@ -348,8 +357,65 @@ all_data %>%
 write.csv(file = "Montipora_ITS2_Type_Profiles.csv")
 ```
 
+```{r Type Profile MC1a}
+all_data %>%
+  filter(str_detect(name, "p_"),
+         HostCluster == "MC1a") %>%    #profiles start with p_
+  group_by(name) %>%
+  dplyr:: count() %>%
+  dplyr:: arrange(desc(n)) %>%
+  ungroup() %>%
+  mutate(prop = n/sum(n)) %>%
+  mutate(cumulative_sum = cumsum(prop))
+```
 
-Not sure this line works, not quite sure what I am meant to be doing here though.
+```{r Type Profile MC1b}
+all_data %>%
+  filter(str_detect(name, "p_"),
+         HostCluster == "MC1b") %>%    #profiles start with p_
+  group_by(name) %>%
+  dplyr:: count() %>%
+  dplyr:: arrange(desc(n)) %>%
+  ungroup() %>%
+  mutate(prop = n/sum(n)) %>%
+  mutate(cumulative_sum = cumsum(prop))
+```
+
+```{r Type Profile MC2}
+all_data %>%
+  filter(str_detect(name, "p_"),
+         HostCluster == "MC2") %>%    #profiles start with p_
+  group_by(name) %>%
+  dplyr:: count() %>%
+  dplyr:: arrange(desc(n)) %>%
+  ungroup() %>%
+  mutate(prop = n/sum(n)) %>%
+  mutate(cumulative_sum = cumsum(prop))
+```
+```{r Type Profile MC3}
+all_data %>%
+  filter(str_detect(name, "p_"),
+         HostCluster == "MC3") %>%    #profiles start with p_
+  group_by(name) %>%
+  dplyr:: count() %>%
+  dplyr:: arrange(desc(n)) %>%
+  ungroup() %>%
+  mutate(prop = n/sum(n)) %>%
+  mutate(cumulative_sum = cumsum(prop))
+```
+
+```{r Type Profile MC4}
+all_data %>%
+  filter(str_detect(name, "p_"),
+         HostCluster == "MC4") %>%    #profiles start with p_
+  group_by(name) %>%
+  dplyr:: count() %>%
+  dplyr:: arrange(desc(n)) %>%
+  ungroup() %>%
+  mutate(prop = n/sum(n)) %>%
+  mutate(cumulative_sum = cumsum(prop))
+```
+
 
 ```{r eval = FALSE}
 all_data %>% 
