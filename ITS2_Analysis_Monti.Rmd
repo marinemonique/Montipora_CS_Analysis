@@ -416,6 +416,18 @@ all_data %>%
   mutate(cumulative_sum = cumsum(prop))
 ```
 
+```{r Type Profile All CSV}
+all_data %>%
+  filter(str_detect(name, "p_")) %>%    # profiles start with p_
+  group_by(HostCluster, name) %>%
+  dplyr::count() %>%
+  ungroup() %>%  # ungroup to allow correct re-grouping and sorting
+  group_by(HostCluster) %>%
+  arrange(HostCluster, desc(n)) %>%
+  mutate(prop = n / sum(n)) %>%
+  mutate(cumulative_sum = cumsum(prop)) |> 
+  write.csv(file = "Montipora_ITS2_HostCluster_TP.csv")
+```
 
 ```{r eval = FALSE}
 all_data %>% 
