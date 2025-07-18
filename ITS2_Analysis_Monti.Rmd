@@ -86,7 +86,7 @@ meta_monti <- meta_monti |>
 
 ## Load Host Data
 ```{r}
-load("~/AIMS@JCU/CoralSeaSymbioants/ITS2 Montipora/Montipora_CS_Analysis/ind_coords_monti.RData")
+load("~/AIMS@JCU/CoralSeasymbionts/ITS2 Montipora/Montipora_CS_Analysis/ind_coords_monti.RData")
 
 monti_seqs_host <- ind_coords_monti %>% 
   mutate("sample_name" = VialID)
@@ -202,7 +202,7 @@ seqs_long <- seqs_monti %>%
   left_join(., meta_monti)
 
 seqs_long <- seqs_long %>%  filter(!str_detect(name, "non")) %>% 
-  filter(!str_detect(name, "p_")) %>%
+  filter(!str_detect(name, "p_")) #%>%
   filter(str_sub(name, 1, 1) == "C" | str_detect(name, "_C"))
 
 # Q. Are we working with the post-med seqs according to the metadata in seqs?
@@ -309,7 +309,7 @@ all_data %>%
   filter(!(str_detect(name, "p_")), name != "non-profile sequences") %>%
   filter(str_sub(name, 1, 1) == "C" | str_detect(name, "_C")) %>% 
   summarise(sum = sum(value))
-# 11090862	
+# 11151533	
 
 ## not sure this line(X / study_total) * 100 # X Cladocopium proportion of all data.
 
@@ -492,7 +492,7 @@ head(seqs_wide_monti)
 k_unidist_monti <- GUniFrac(seqs_wide_monti, k_tree_monti)   #GUniFrac calculates all the distances 
 k_unidist_monti <- k_unidist_monti$unifracs
 
-#load("~/AIMS@JCU/CoralSeaSymbioants/ITS2 Montipora/Montipora_CS_Analysis/k_unidist_monti.RData")
+#load("~/AIMS@JCU/CoralSeasymbionts/ITS2 Montipora/Montipora_CS_Analysis/k_unidist_monti.RData")
 
  # GUniFrac with alpha 0.5 (i.e Generalised UniFrac Distance)
 du_monti <- k_unidist_monti[, , "d_0.5"]   
@@ -606,7 +606,7 @@ MDSxy.monti %>%
 ## Procrustes Rotation
 
 ```{r}
-load("~/AIMS@JCU/CoralSeaSymbioants/ITS2 Montipora/Montipora_CS_Analysis/ind_coords_monti.RData")
+load("~/AIMS@JCU/CoralSeasymbionts/ITS2 Montipora/Montipora_CS_Analysis/ind_coords_monti.RData")
 
 monti_seqs_host <- ind_coords_monti %>% 
   mutate("sample_name" = VialID)
@@ -635,7 +635,7 @@ shared_seqs_monti <- inner_join(monti_seqs_host, seq_data, by = "sample_name")
 seq_data %>% 
   distinct(sample_name) %>% 
   nrow()
- #should be 187 in the symbioant
+ #should be 187 in the symbiont
 
 shared_seqs_monti <- shared_seqs_monti %>% 
   select(sample_name)
@@ -644,7 +644,7 @@ shared_seqs_monti <- shared_seqs_monti %>%
 Host tree
 
 ```{r}
- load("~/AIMS@JCU/CoralSeaSymbioants/ITS2 Montipora/Montipora_CS_Analysis/monti_gen.RData") #load host data
+ load("~/AIMS@JCU/CoralSeasymbionts/ITS2 Montipora/Montipora_CS_Analysis/monti_gen.RData") #load host data
 
 library(adegenet) #install required package
 library(poppr)
@@ -668,32 +668,32 @@ host_shared_dist <- dist(monti_gen_subset, method = "euclidean") #calculate eucl
 # convert the distance matrix to a dist object
 host_dist_matrix <- as.dist(host_shared_dist)
 
-#Create a matrix with only common sample names for symbioant
-seqs_wide_symbioant <- seq_data %>%
+#Create a matrix with only common sample names for symbiont
+seqs_wide_symbiont <- seq_data %>%
   select(sample_name, name, value) %>%
   filter(sample_name %in% shared_seqs_monti$sample_name) %>% 
   pivot_wider(names_from = name, values_from = value, values_fill = 0) %>%
   tibble::column_to_rownames(var = "sample_name") #187 samples
 
-#k_tree_monti_symbioant <- kdist_monti_symbioant %>% phangorn::upgma()
+#k_tree_monti_symbiont <- kdist_monti_symbiont %>% phangorn::upgma()
 
-load("~/AIMS@JCU/CoralSeaSymbioants/ITS2 Montipora/Montipora_CS_Analysis/k_unidist_monti.RData")
-k_unidist_symbioant <- k_unidist_monti
+load("~/AIMS@JCU/CoralSeasymbionts/ITS2 Montipora/Montipora_CS_Analysis/k_unidist_monti.RData")
+k_unidist_symbiont <- k_unidist_monti
 
 
  # GUniFrac with alpha 0.5 (i.e Generalised UniFrac Distance)
-du_monti_symbioant <- k_unidist_symbioant[, , "d_0.5"]   
-dist_monti_symbioant <- as.dist(du_monti_symbioant, diag = FALSE)
+du_monti_symbiont <- k_unidist_symbiont[, , "d_0.5"]   
+dist_monti_symbiont <- as.dist(du_monti_symbiont, diag = FALSE)
 ```
 
-# Symbioant Tree 
+# symbiont Tree 
 
 
 
 ```{r}
 #convert host (H) and symbiont (P) distance trees as data matrices
 H.dist <- host_dist_matrix %>% as.matrix()
-P.dist <- dist_monti_symbioant %>% as.matrix() 
+P.dist <- dist_monti_symbiont %>% as.matrix() 
 ```
 
 ```{r}
@@ -703,7 +703,7 @@ dim(P.dist)
 
 # Subset to only the samples that are in both datasets
 intersect_samples <- intersect(rownames(H.dist), rownames(P.dist))
-intersect_samples_col <- intersect(colnames(H.dist), colnames(P.dist)) # The host data set had 177, and the symbioant had 187
+intersect_samples_col <- intersect(colnames(H.dist), colnames(P.dist)) # The host data set had 177, and the symbiont had 187
 P.dist_intersect <- P.dist[intersect_samples, intersect_samples_col]
 H.dist_intersect <- H.dist[intersect_samples, intersect_samples_col ]
 
